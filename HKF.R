@@ -62,7 +62,7 @@ HKF <- function(...)
   nmXdataind <- match(nmXdata, names(x))
   if(!is.na(nmXdataind)){
     
-    if (!(nrow(x$A) == ncols(xdata) && ncol(x$A) == m)){
+    if (!(nrow(x$A) == ncol(x$xdata) && ncol(x$A) == p)){
       
       stop("Incompatible dimensions of matrices")
     } 
@@ -93,8 +93,9 @@ HKF(
   R = diag(2),
   Q = matrix(0, 3, 3),
   FF = matrix(0,3,3),
-  cons = matrix(0,3,1)
-  
+  cons = matrix(0,3,1),
+  xdata = matrix(cbind(1,1,1,1,1,1,1),
+                 cbind(1,1,1,1,1,1,1), nrow = 2, ncol = 7)
   
   
 )  
