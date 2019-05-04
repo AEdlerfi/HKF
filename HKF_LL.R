@@ -11,7 +11,7 @@ HKF.LL <- function(params,build) {
   tt <- dim(mod$y)[1]
   n <- dim(mod$y)[2]
   
-  ll.vec <- matrix(mod$A,tt,1)
+  ll.vec <- matrix(NA,tt,1)
   ll.cum <- 0
   xi.tt <- mod$X0
   P.tt  <- mod$P0
@@ -71,18 +71,18 @@ HKF.MLE <- function(build, params, Param_LB = NA, Param_UB = NA){
   }
   
   if(is.na(Param_LB) && is.na(Param_UB)) # no constraints
-  nloptr.out <- nloptr(params, f, eval_grad_f=function(x) {gradient(f, x)}, opts=list("algorithm"="NLOPT_LD_LBFGS","xtol_rel"=1.0e-8,"maxeval"=200))
+  nloptr.out <- nloptr(params, f, eval_grad_f=function(x) {gradient(f, x)}, opts=list("algorithm"="NLOPT_LD_LBFGS","xtol_rel"=1.0e-8,"maxeval"=5000))
   if(is.na(Param_LB) && !is.na(Param_UB)) # Upper constraint
-    nloptr.out <- nloptr(params, f, eval_grad_f=function(x) {gradient(f, x)}, ub=theta.ub, opts=list("algorithm"="NLOPT_LD_LBFGS","xtol_rel"=1.0e-8,"maxeval"=200))
+    nloptr.out <- nloptr(params, f, eval_grad_f=function(x) {gradient(f, x)}, ub=theta.ub, opts=list("algorithm"="NLOPT_LD_LBFGS","xtol_rel"=1.0e-8,"maxeval"=5000))
   if(!is.na(Param_LB) && is.na(Param_UB)) # lower constraint
-    nloptr.out <- nloptr(params, f, eval_grad_f=function(x) {gradient(f, x)},lb=theta.lb, opts=list("algorithm"="NLOPT_LD_LBFGS","xtol_rel"=1.0e-8,"maxeval"=200))
+    nloptr.out <- nloptr(params, f, eval_grad_f=function(x) {gradient(f, x)},lb=theta.lb, opts=list("algorithm"="NLOPT_LD_LBFGS","xtol_rel"=1.0e-8,"maxeval"=5000))
   if(!is.na(Param_LB) && !is.na(Param_UB)) # both upper and lower constraint
-    nloptr.out <- nloptr(params, f, eval_grad_f=function(x) {gradient(f, x)},lb=theta.lb, ub=theta.ub, opts=list("algorithm"="NLOPT_LD_LBFGS","xtol_rel"=1.0e-8,"maxeval"=200))
+    nloptr.out <- nloptr(params, f, eval_grad_f=function(x) {gradient(f, x)},lb=theta.lb, ub=theta.ub, opts=list("algorithm"="NLOPT_LD_LBFGS","xtol_rel"=1.0e-8,"maxeval"=5000))
   
   
-  params <- nloptr.out$solution
   
-  return(params)
+  
+  return(nloptr.out)
   
 }
 
@@ -90,57 +90,4 @@ HKF.MLE <- function(build, params, Param_LB = NA, Param_UB = NA){
 # TESTING
 #----------------------------------------------------------------------------------------
 # Test this returns a object of class HKF and does all the checks
-
-
-stage1 <-  HKF(
-  
-  A = matrix(0, 7, 2),
-  H = matrix(0, 3, 2),
-  R = diag(2),
-  Q = matrix(0, 3, 3),
-  FF = matrix(0,3,3),
-  cons = matrix(0,3,1),
-  
-  y.data = matrix(rnorm(25),
-                  rnorm(25), nrow = 25, ncol = 2),
-  x.data = matrix(1,25,7),
-  
-  X0 = matrix(1,3,1),
-  P0 = diag(0,3)
-  
-)  
-
-
-
-# Test this returns parameters of MLE 
-
-#Create "build" which is passed MLE
-
-stage1Est <- function(params){
-  
-  stage1$A[1:2, 1] <- params[1:2]
-  stage1$A[1, 2]   <- params[5]
-  stage1$A[3:4, 2] <- params[3:4]
-  stage1$A[5, 2]   <- 1-sum(stage1$A[3:4, 2])
-  stage1$A[6:7, 2] <- params[6:7]
-  
-  stage1$H[1, 1]   <- 1
-  stage1$H[2:3, 1] <- -params[1:2]
-  stage1$H[2, 2]   <- -params[5]
-  
-  stage1$R         <- diag(c(params[9]^2, params[10]^2))
-  stage1$Q         <- matrix(0, 3, 3)
-  stage1$Q[1, 1]   <- params[11]^2
-  
-  stage1$FF[1, 1] <- stage1$FF[2, 1] <- stage1$FF[3, 2] <- 1
-  
-  stage1$cons[1, 1] <- params[8]
-  
-  return(stage1)
-  
-}
-
-#MLE
-
-HKF.MLE(build = stage1Est, params = c(rep(3,11)))
 
