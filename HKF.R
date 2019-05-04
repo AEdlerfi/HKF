@@ -17,7 +17,7 @@ HKF <- function(...)
     
   # Create new model
   
-  nm <- c("A","H","R","Q","FF","cons")
+  nm <- c("A","H","R","Q","FF","cons","X0","P0","y.data","x.data")
   nmInd <- match(nm,names(x))
   # Check for na's
   if(any(is.na(nmInd)))
@@ -58,11 +58,11 @@ HKF <- function(...)
     stop("Component A must be numeric")
   } 
   # Check if exogenous variable design matrix is compatible
-  nmXdata <- c("xdata")
+  nmXdata <- c("x.data")
   nmXdataind <- match(nmXdata, names(x))
   if(!is.na(nmXdataind)){
     
-    if (!(nrow(x$A) == ncol(x$xdata) && ncol(x$A) == p)){
+    if (!(nrow(x$A) == ncol(x$x.data) && ncol(x$A) == p)){
       
       stop("Incompatible dimensions of matrices")
     } 
@@ -70,33 +70,40 @@ HKF <- function(...)
   }
   
   if (!is.numeric(x$cons)){
-    stop("Component C0 must be numeric")
+    stop("Component cons must be numeric")
   } 
     
   if (!(nrow(x$cons) == m && NCOL(x$cons) == 1)){
     stop("Incompatible dimensions of matrices")
   } 
     
+  # Check if starting values for state variables are compatible
+  if (!(nrow(x$P0) == m && ncol(x$P0) == m)) 
+    stop("Incompatible dimensions of matrices")
+  if (!(is.numeric(x$X0) && NCOL(x$X0) == 1 && NROW(x$X0) == 
+        m)) 
+    stop(paste("Component X0 must be a numeric vector of length", 
+               "\n equal to ncol of component H', or a matrix with one column and", 
+               "\n number of rows equal to ncol of component H'"))
+  
+  if (!(all.equal(x$P0, t(x$P0)) && all(eigen(x$P0)$values >= 
+                                        0))) 
+    stop("C0 is not a valid variance matrix")
+  
+  if (any(c(is.na(x$P0), is.na(x$X0)))) 
+    stop("Missing values are not allowed in components m0 and C0")
+  
+  if (!(all.equal(x$R, t(x$R)) && all(eigen(x$R)$values >= 
+                                        0))) 
+      stop("V is not a valid variance matrix")
+    if (!(all.equal(x$Q, t(x$Q)) && all(eigen(x$Q)$values >= 
+                                        0))) 
+      stop("W is not a valid variance matrix")
+    
+  
   mod <- x[nmInd]
   class(mod) <- "HKF"
     return(mod)
   }  
   
-
-# Test this returns a object of class HKF and does all the checks
-
-  
-HKF(
-  
-  A = matrix(0, 7, 2),
-  H = matrix(0, 3, 2),
-  R = diag(2),
-  Q = matrix(0, 3, 3),
-  FF = matrix(0,3,3),
-  cons = matrix(0,3,1),
-  xdata = matrix(cbind(1,1,1,1,1,1,1),
-                 cbind(1,1,1,1,1,1,1), nrow = 2, ncol = 7)
-  
-  
-)  
 
