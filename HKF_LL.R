@@ -70,7 +70,7 @@ HKF.MLE <- function(build, params, Param_LB = NA, Param_UB = NA){
   
   f <- function(params) {
     
-    mod <- stage1Est(params)
+    mod <- build(params)
     
     return(-HKF.LL(params, mod)$ll.cum)
     
@@ -98,35 +98,89 @@ HKF.MLE <- function(build, params, Param_LB = NA, Param_UB = NA){
   
 }
 
+
 #-----------------------------------------------------------------------------------------
-# TESTING
+# Function name: HKF.filter
+#----------------------------------------------------------------------------------------
+
+HKF.filter <-   function(mod, t=1) {
+  
+  # State updating eq
+  xi.ttm1 <- as.vector(mod$FF %*% mod$X0 + mod$cons)
+  
+  # MSE updating eq
+  P.ttm1 <- mod$FF %*% mod$P0 %*% t(mod$FF) + mod$Q
+  
+  # Equations (13.2.9 - 13.2.10) from Hamilton Chapter 13, page 379
+  prediction.error <- (as.vector(mod$y.data[t,]) - as.vector(t(mod$A) %*% as.vector(mod$x.data[t,])) - as.vector(t(mod$H) %*% xi.ttm1))
+  
+  # Mean Squared Error
+  HPHR <- t(mod$H) %*% P.ttm1 %*% mod$H + mod$R
+  
+  xi.tt <- xi.ttm1 + as.vector(P.ttm1 %*% mod$H %*% solve(HPHR, prediction.error))
+  
+  P.tt <- P.ttm1 - P.ttm1 %*% mod$H %*% solve(HPHR, t(mod$H) %*% P.ttm1)
+  
+  if (t == dim(mod$y.data)[1]) {
+    
+    print("Kalman filter has run")
+    return(list("xi.ttm1"=xi.ttm1, "P.ttm1"=P.ttm1, "xi.tt"=xi.tt, "P.tt"=P.tt))
+    
+    
+  } else {
+    
+    tmp <- HKF.filter(mod, t+1)
+    
+    return(list("xi.ttm1"=rbind(xi.ttm1, tmp$xi.ttm1),
+                "P.ttm1"=rbind(P.ttm1, tmp$P.ttm1),
+                "xi.tt"=rbind(xi.tt, tmp$xi.tt),
+                "P.tt"=rbind(P.tt, tmp$P.tt)))
+    
+  }
+}
+
+
+#-----------------------------------------------------------------------------------------
+# Function name: HKF.initalstates
 #----------------------------------------------------------------------------------------
 # Test this returns a object of class HKF and does all the checks
+
+HKF.initalstates <-  function(params, build){
+  
+  mod <- build(params)
+  
+  n.state.vars <- length(mod$X0)
+  
+  ##  Starting values for mod$xi.00 and mod$P.00
+  x  <- rbind(t(mod$H), t(mod$H) %*% mod$FF, t(mod$H) %*% mod$FF %*% mod$FF, t(mod$H) %*% mod$FF %*% mod$FF %*% mod$FF)
+  
+  om <- matrix(0, 8, 8)
+  
+  om[5:6, 3:4] <- t(mod$H) %*% mod$FF %*% mod$Q %*% mod$H
+  om[7:8, 3:4] <- t(mod$H) %*% mod$FF %*% mod$FF %*% mod$Q %*% mod$H
+  om[7:8, 5:6] <- t(mod$H) %*% (mod$FF %*% mod$FF %*% mod$Q %*% t(mod$FF) + mod$FF %*% mod$Q) %*% mod$H
+  
+  om           <- om + t(om)
+  om[1:2, 1:2] <- mod$R
+  om[3:4, 3:4] <- t(mod$H) %*% mod$Q %*% mod$H + mod$R
+  om[5:6, 5:6] <- t(mod$H) %*% (mod$FF %*% mod$Q %*% t(mod$FF) + mod$Q) %*% mod$H + mod$R
+  om[7:8, 7:8] <- t(mod$H) %*% (mod$FF %*% mod$FF %*% mod$Q %*% t(mod$FF) %*% t(mod$FF) + mod$FF %*% mod$Q %*% t(mod$FF) + mod$Q) %*% mod$H + mod$R
+  
+  p1 <- t(x) %*% solve(om, x) ## x' * inv(om) * x
+  yy <- c(mod$y.data[1,], mod$y.data[2,], mod$y.data[3,], mod$y.data[4,])
+  tmp <- c(t(mod$A) %*% mod$x.data[1,],
+           (t(mod$A) %*% mod$x.data[2,] + t(mod$H) %*% mod$cons),
+           (t(mod$A) %*% mod$x.data[3,] + t(mod$H) %*% mod$cons + t(mod$H) %*% mod$FF %*% mod$cons),
+           (t(mod$A) %*% mod$x.data[4,] + t(mod$H) %*% (diag(n.state.vars)+mod$FF+mod$FF%*%mod$FF) %*% mod$cons))
+  xi.00 <- solve(p1, t(x)) %*% solve(om, yy - tmp)
+  tmp <- yy - tmp - x %*% xi.00
+  P.00 <- solve(p1, (diag(nrow=3) * sum(tmp^2) / 3))
+  
+  
+  
+  
+}
 
 stage1 <- stage1Est(initial.parameters)
 
 mod <- stage1
-
-n.state.vars <- length(mod$X0)
-
-##  Starting values for mod$xi.00 and mod$P.00
-x  <- rbind(t(mod$H), t(mod$H) %*% mod$FF, t(mod$H) %*% mod$FF %*% mod$FF, t(mod$H) %*% mod$FF %*% mod$FF %*% mod$FF)
-om <- matrix(0, 8, 8)
-om[5:6, 3:4] <- t(mod$H) %*% mod$FF %*% mod$Q %*% mod$H
-om[7:8, 3:4] <- t(mod$H) %*% mod$FF %*% mod$FF %*% mod$Q %*% mod$H
-om[7:8, 5:6] <- t(mod$H) %*% (mod$FF %*% mod$FF %*% mod$Q %*% t(mod$FF) + mod$FF %*% mod$Q) %*% mod$H
-om           <- om + t(om)
-om[1:2, 1:2] <- mod$R
-om[3:4, 3:4] <- t(mod$H) %*% mod$Q %*% mod$H + mod$R
-om[5:6, 5:6] <- t(mod$H) %*% (mod$FF %*% mod$Q %*% t(mod$FF) + mod$Q) %*% mod$H + mod$R
-om[7:8, 7:8] <- t(mod$H) %*% (mod$FF %*% mod$FF %*% mod$Q %*% t(mod$FF) %*% t(mod$FF) + mod$FF %*% mod$Q %*% t(mod$FF) + mod$Q) %*% mod$H + mod$R
-
-p1 <- t(x) %*% solve(om, x) ## x' * inv(om) * x
-yy <- c(mod$y.data[1,], mod$y.data[2,], mod$y.data[3,], mod$y.data[4,])
-tmp <- c(t(mod$A) %*% mod$x.data[1,],
-         (t(mod$A) %*% mod$x.data[2,] + t(mod$H) %*% mod$cons),
-         (t(mod$A) %*% mod$x.data[3,] + t(mod$H) %*% mod$cons + t(mod$H) %*% mod$FF %*% mod$cons),
-         (t(mod$A) %*% mod$x.data[4,] + t(mod$H) %*% (diag(n.state.vars)+mod$FF+mod$FF%*%mod$FF) %*% mod$cons))
-xi.00 <- solve(p1, t(x)) %*% solve(om, yy - tmp)
-tmp <- yy - tmp - x %*% xi.00
-P.00 <- solve(p1, (diag(nrow=3) * sum(tmp^2) / 3))
