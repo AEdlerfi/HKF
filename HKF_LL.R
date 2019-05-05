@@ -103,13 +103,23 @@ HKF.MLE <- function(build, params, Param_LB = NA, Param_UB = NA){
 # Function name: HKF.filter
 #----------------------------------------------------------------------------------------
 
-HKF.filter <-   function(mod, t=1) {
+HKF.filter <-   function(mod, t=1, xi.tt = NA, P.tt = NA) {
   
-  # State updating eq
-  xi.ttm1 <- as.vector(mod$FF %*% mod$X0 + mod$cons)
+  if(!is.na(xi.tt) && !is.na(xi.tt)){
+    
+    xi.ttm1 <- xi.tt
+    P.ttm1 <- P.tt
+    
+  }else{
+    
+    # State updating eq
+    xi.ttm1 <- as.vector(mod$FF %*% mod$X0 + mod$cons)
+    
+    # MSE updating eq
+    P.ttm1 <- mod$FF %*% mod$P0 %*% t(mod$FF) + mod$Q
+    
+  }
   
-  # MSE updating eq
-  P.ttm1 <- mod$FF %*% mod$P0 %*% t(mod$FF) + mod$Q
   
   # Equations (13.2.9 - 13.2.10) from Hamilton Chapter 13, page 379
   prediction.error <- (as.vector(mod$y.data[t,]) - as.vector(t(mod$A) %*% as.vector(mod$x.data[t,])) - as.vector(t(mod$H) %*% xi.ttm1))
@@ -117,8 +127,10 @@ HKF.filter <-   function(mod, t=1) {
   # Mean Squared Error
   HPHR <- t(mod$H) %*% P.ttm1 %*% mod$H + mod$R
   
+  # State updating equation
   xi.tt <- xi.ttm1 + as.vector(P.ttm1 %*% mod$H %*% solve(HPHR, prediction.error))
   
+  # Updated MSE 
   P.tt <- P.ttm1 - P.ttm1 %*% mod$H %*% solve(HPHR, t(mod$H) %*% P.ttm1)
   
   if (t == dim(mod$y.data)[1]) {
@@ -129,7 +141,7 @@ HKF.filter <-   function(mod, t=1) {
     
   } else {
     
-    tmp <- HKF.filter(mod, t+1)
+    tmp <- HKF.filter(mod, t+1, xi.tt = xi.tt , P.tt = P.tt)
     
     return(list("xi.ttm1"=rbind(xi.ttm1, tmp$xi.ttm1),
                 "P.ttm1"=rbind(P.ttm1, tmp$P.ttm1),
