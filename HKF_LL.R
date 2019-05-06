@@ -103,14 +103,15 @@ HKF.MLE <- function(build, params, Param_LB = NA, Param_UB = NA){
 # Function name: HKF.filter
 #----------------------------------------------------------------------------------------
 
-HKF.filter <-   function(mod, t=1, xi.tt = NA, P.tt = NA) {
+HKF.filter <-   function(mod, t=1, xi.tt1 = NA, P.tt1 = NA) {
   
-  if(!is.na(xi.tt) && !is.na(xi.tt)){
-    
-    xi.ttm1 <- xi.tt
-    P.ttm1 <- P.tt
-    
-  }else{
+  
+   if(!is.na(xi.tt1) && !is.na(P.tt1)){
+  #   
+     xi.ttm1 <- as.vector(mod$FF %*% xi.tt1 + mod$cons)
+     P.ttm1 <- mod$FF %*% P.tt1 %*% t(mod$FF) + mod$Q
+     
+   }else{
     
     # State updating eq
     xi.ttm1 <- as.vector(mod$FF %*% mod$X0 + mod$cons)
@@ -141,7 +142,7 @@ HKF.filter <-   function(mod, t=1, xi.tt = NA, P.tt = NA) {
     
   } else {
     
-    tmp <- HKF.filter(mod, t+1, xi.tt = xi.tt , P.tt = P.tt)
+    tmp <- HKF.filter(mod, t+1, xi.tt1 = xi.tt , P.tt1 = P.tt)
     
     return(list("xi.ttm1"=rbind(xi.ttm1, tmp$xi.ttm1),
                 "P.ttm1"=rbind(P.ttm1, tmp$P.ttm1),
