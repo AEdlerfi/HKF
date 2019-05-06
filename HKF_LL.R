@@ -147,10 +147,113 @@ HKF.filter <-   function(mod, t=1, xi.tt1 = NA, P.tt1 = NA) {
     return(list("xi.ttm1"=rbind(xi.ttm1, tmp$xi.ttm1),
                 "P.ttm1"=rbind(P.ttm1, tmp$P.ttm1),
                 "xi.tt"=rbind(xi.tt, tmp$xi.tt),
+                "P.tt"=rbind(P.tt, tmp$P.tt),
+                "SS model" = mod
+                )
+           
+           )
+    
+  }
+}
+
+#-----------------------------------------------------------------------------------------
+# Function name: HKF.smoother
+#----------------------------------------------------------------------------------------
+
+HKF.smooth <- function(mod, xi.tp1T=NA, P.tp1T=NA){
+  
+  
+  n <- dim(mod$xi.ttm1)[2]
+  
+  if (t == dim(mod$`SS model`$y.data)[1]) {
+    
+    xi.tT <- mod$xi.tt[t,]
+    
+    P.tT <- mod$P.tt[((t-1)*n+1):(t*n),]
+    
+    tmp <- HKF.smooth(mod, xi.tT, P.tT)
+    
+    return(list("xi.tT"=rbind(tmp$xi.tT, xi.tT),
+                "P.tT" =rbind(tmp$P.tT, P.tT)))
+    
+                                                } else {
+    P.tt <- mod$P.tt[((t-1)*n+1):(t*n),]
+    P.tp1t <- mod$P.ttm1[(t*n+1):((t+1)*n),]
+    
+    J.t <- P.tt %*% t(mod$`SS model`$FF) %*% solve(P.tp1t)
+    
+    xi.tt <- mod$xi.tt[t,]
+    xi.tp1t <- mod$xi.ttm1[t+1,]
+    
+    
+    xi.tT <- xi.tt + as.vector(J.t %*% (xi.tp1T - xi.tp1t))
+    P.tT <- P.tt + J.t %*% (P.tp1T - P.tp1t) %*% t(J.t)
+    
+    if (t > 1) {
+      
+      tmp <- HKF.smooth(mod, xitT, P.tT)
+      
+      return(list("xi.tT"=rbind(tmp$xi.tT, xi.tT),
+                  "P.tT" =rbind(tmp$P.tT, P.tT)))
+    } else {
+      
+      return(list("xi.tT"=xi.tT, "P.tT"=P.tT))
+    }
+  }
+  
+}
+
+
+HKF.filter <-   function(mod, t=1, xi.tt1 = NA, P.tt1 = NA) {
+  
+  
+  if(!is.na(xi.tt1) && !is.na(P.tt1)){
+    #   
+    xi.ttm1 <- as.vector(mod$FF %*% xi.tt1 + mod$cons)
+    P.ttm1 <- mod$FF %*% P.tt1 %*% t(mod$FF) + mod$Q
+    
+  }else{
+    
+    # State updating eq
+    xi.ttm1 <- as.vector(mod$FF %*% mod$X0 + mod$cons)
+    
+    # MSE updating eq
+    P.ttm1 <- mod$FF %*% mod$P0 %*% t(mod$FF) + mod$Q
+    
+  }
+  
+  
+  # Equations (13.2.9 - 13.2.10) from Hamilton Chapter 13, page 379
+  prediction.error <- (as.vector(mod$y.data[t,]) - as.vector(t(mod$A) %*% as.vector(mod$x.data[t,])) - as.vector(t(mod$H) %*% xi.ttm1))
+  
+  # Mean Squared Error
+  HPHR <- t(mod$H) %*% P.ttm1 %*% mod$H + mod$R
+  
+  # State updating equation
+  xi.tt <- xi.ttm1 + as.vector(P.ttm1 %*% mod$H %*% solve(HPHR, prediction.error))
+  
+  # Updated MSE 
+  P.tt <- P.ttm1 - P.ttm1 %*% mod$H %*% solve(HPHR, t(mod$H) %*% P.ttm1)
+  
+  if (t == dim(mod$y.data)[1]) {
+    
+    print("Kalman filter has run")
+    return(list("xi.ttm1"=xi.ttm1, "P.ttm1"=P.ttm1, "xi.tt"=xi.tt, "P.tt"=P.tt))
+    
+    
+  } else {
+    
+    tmp <- HKF.filter(mod, t+1, xi.tt1 = xi.tt , P.tt1 = P.tt)
+    
+    return(list("xi.ttm1"=rbind(xi.ttm1, tmp$xi.ttm1),
+                "P.ttm1"=rbind(P.ttm1, tmp$P.ttm1),
+                "xi.tt"=rbind(xi.tt, tmp$xi.tt),
                 "P.tt"=rbind(P.tt, tmp$P.tt)))
     
   }
 }
+
+
 
 
 #-----------------------------------------------------------------------------------------
