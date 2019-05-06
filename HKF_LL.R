@@ -162,9 +162,9 @@ HKF.filter <-   function(mod, t=1, xi.tt1 = NA, P.tt1 = NA) {
 
 HKF.smooth <- function(mod, t = 0,  xi.tp1T=NA, P.tp1T=NA){
   
-  #if(t = 0){
-   # stop("You must enter the number of time steps in Y")
-  #}
+  if(t == 0){
+    stop("t = 0, You must enter the number of time steps in Y")
+  }
   
   
   n <- dim(mod$xi.ttm1)[2]
