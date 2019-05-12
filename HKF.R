@@ -67,6 +67,11 @@ HKF <- function(...)
       stop("Incompatible dimensions of matrices")
     } 
     
+  } else{ # Not doing the correct thing here
+    
+    x.data <- matrix(0,dim(y.data[1]),dim(y.data)[2])
+    
+    
   }
   
   if (!is.numeric(x$cons)){

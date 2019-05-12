@@ -7,7 +7,7 @@
 # @Param_LB lower bound constraints on the parameter vector
 # @Param_UB upper bound constraint on the parameter vector 
 
-HKF.MLE <- function(build, params, Param_LB = NA, Param_UB = NA){
+HKF.MLE <- function(build, params, Param_LB = NA, Param_UB = NA, useoptim = FALSE, ...){
   
   
   
@@ -36,22 +36,31 @@ HKF.MLE <- function(build, params, Param_LB = NA, Param_UB = NA){
   }
   
   
-  if(is.na(Param_LB) && is.na(Param_UB)) # no mod$constraints
+  if(useoptim ==TRUE){
     
-    nloptr.out <- nloptr(params, f, eval_grad_f= function(x) {gradient(f, x)},
-                         opts=list("algorithm"="NLOPT_LD_LBFGS","xtol_rel"=1.0e-8,"maxeval"=5000))
+    nloptr.out <- optim(params, f, ...)
+    
+  } else{
   
-  if(is.na(Param_LB) && !is.na(Param_UB)) # Upper mod$constraint
-    nloptr.out <- nloptr(params, f, eval_grad_f=function(x) {gradient(f, x)}, ub=theta.ub, opts=list("algorithm"="NLOPT_LD_LBFGS","xtol_rel"=1.0e-8,"maxeval"=5000))
-  
-  if(!is.na(Param_LB) && is.na(Param_UB)) # lower mod$constraint
-    nloptr.out <- nloptr(params, f, eval_grad_f=function(x) {gradient(f, x)},lb=theta.lb, opts=list("algorithm"="NLOPT_LD_LBFGS","xtol_rel"=1.0e-8,"maxeval"=5000))
-  
-  if(!is.na(Param_LB) && !is.na(Param_UB)) # both upper and lower mod$constraint
-    nloptr.out <- nloptr(params, f, eval_grad_f=function(x) {gradient(f, x)},lb=theta.lb, ub=theta.ub, opts=list("algorithm"="NLOPT_LD_LBFGS","xtol_rel"=1.0e-8,"maxeval"=5000))
-  
-  
-  
+    if(is.na(Param_LB) && is.na(Param_UB)) # no mod$constraints
+      
+      nloptr.out <- nloptr(params, f, eval_grad_f= function(x) {gradient(f, x)},
+                           opts=list("algorithm"="NLOPT_LD_LBFGS","xtol_rel"=1.0e-8,"maxeval"=5000))
+    
+    if(is.na(Param_LB) && !is.na(Param_UB)) # Upper mod$constraint
+      nloptr.out <- nloptr(params, f, eval_grad_f=function(x) {gradient(f, x)}, ub=theta.ub, opts=list("algorithm"="NLOPT_LD_LBFGS","xtol_rel"=1.0e-8,"maxeval"=5000))
+    
+    if(!is.na(Param_LB) && is.na(Param_UB)) # lower mod$constraint
+      nloptr.out <- nloptr(params, f, eval_grad_f=function(x) {gradient(f, x)},lb=theta.lb, opts=list("algorithm"="NLOPT_LD_LBFGS","xtol_rel"=1.0e-8,"maxeval"=5000))
+    
+    if(!is.na(Param_LB) && !is.na(Param_UB)) # both upper and lower mod$constraint
+      nloptr.out <- nloptr(params, f, eval_grad_f=function(x) {gradient(f, x)},lb=theta.lb, ub=theta.ub, opts=list("algorithm"="NLOPT_LD_LBFGS","xtol_rel"=1.0e-8,"maxeval"=5000))
+    
+    
+      
+  }
+    
+    
   
   return(nloptr.out)
   
