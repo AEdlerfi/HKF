@@ -64,7 +64,7 @@ HKF <- function(...)
     
     if (!(nrow(x$A) == ncol(x$x.data) && ncol(x$A) == p)){
       
-      stop("Incompatible dimensions of matrices")
+      stop("Incompatible dimensions of matrices check A and x.data")
     } 
     
   } else{ # Not doing the correct thing here
@@ -79,7 +79,7 @@ HKF <- function(...)
   } 
     
   if (!(nrow(x$cons) == m && NCOL(x$cons) == 1)){
-    stop("Incompatible dimensions of matrices")
+    stop("Incompatible dimensions of matrices - cons needs to be same rows as H")
   } 
     
   # Check if starting values for state variables are compatible
