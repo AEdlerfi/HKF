@@ -17,7 +17,7 @@ HKF <- function(...)
     
   # Create new model
   
-  nm <- c("A","H","R","Q","FF","cons","X0","P0","y.data","x.data")
+  nm <- c("A","H","R","Q","FF","cons","X0","P0","y.data","x.data", "x.data.s")
   nmInd <- match(nm,names(x))
   # Check for na's
   if(any(is.na(nmInd)))
@@ -78,10 +78,11 @@ HKF <- function(...)
     stop("Component cons must be numeric")
   } 
     
-  if (!(nrow(x$cons) == m && NCOL(x$cons) == 1)){
+  if (!(nrow(x$cons) == m)){
     stop("Incompatible dimensions of matrices - cons needs to be same rows as H")
   } 
     
+  
   # Check if starting values for state variables are compatible
   if (!(nrow(x$P0) == m && ncol(x$P0) == m)) 
     stop("Incompatible dimensions of matrices")
@@ -96,7 +97,7 @@ HKF <- function(...)
     stop("C0 is not a valid variance matrix")
   
   if (any(c(is.na(x$P0), is.na(x$X0)))) 
-    stop("Missing values are not allowed in components m0 and C0")
+    stop("Missing values are not allowed in components x0 and P0")
   
   if (!(all.equal(x$R, t(x$R)) && all(eigen(x$R)$values >= 
                                         0))) 

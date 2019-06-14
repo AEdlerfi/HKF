@@ -14,7 +14,7 @@ HKF.smooth <- function(mod, t = 0,  xi.tp1T=NA, P.tp1T=NA){
     stop("t = 0, You must enter the number of time steps in Y")
   }
   
-  
+
   n <- dim(mod$xi.ttm1)[2]
   
   if (t == dim(mod$`SS model`$y.data)[1]) {
