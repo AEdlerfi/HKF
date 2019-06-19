@@ -13,13 +13,13 @@ HKF.filter <-   function(mod, t=1, xi.tt1 = NA, P.tt1 = NA) {
   
   if(!is.na(xi.tt1) && !is.na(P.tt1)){
     #   
-    xi.ttm1 <- as.vector(mod$FF %*% xi.tt1 + mod$cons%*%as.vector(mod$x.data.s[t,]))
+    xi.ttm1 <- as.vector(mod$FF %*% xi.tt1 + mod$cons)
     P.ttm1 <- mod$FF %*% P.tt1 %*% t(mod$FF) + mod$Q
     
   }else{
     
     # State updating eq
-    xi.ttm1 <- as.vector(mod$FF %*% mod$X0 + mod$cons%*%as.vector(mod$x.data.s[t,]))
+    xi.ttm1 <- as.vector(mod$FF %*% mod$X0 + mod$cons)
     
     # MSE updating eq
     P.ttm1 <- mod$FF %*% mod$P0 %*% t(mod$FF) + mod$Q

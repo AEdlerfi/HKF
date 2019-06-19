@@ -17,7 +17,7 @@ HKF <- function(...)
     
   # Create new model
   
-  nm <- c("A","H","R","Q","FF","cons","X0","P0","y.data","x.data", "x.data.s")
+  nm <- c("A","H","R","Q","FF","cons","X0","P0","y.data","x.data")
   nmInd <- match(nm,names(x))
   # Check for na's
   if(any(is.na(nmInd)))
@@ -31,6 +31,8 @@ HKF <- function(...)
   # Get dimensions of FF matrix
   m <- nrow(x$H)
   p <- ncol(x$H)
+  
+  
   if(!is.numeric(x$R)){
     stop("Component R must be numeric")
   }
@@ -60,6 +62,8 @@ HKF <- function(...)
   # Check if exogenous variable design matrix is compatible
   nmXdata <- c("x.data")
   nmXdataind <- match(nmXdata, names(x))
+  
+  
   if(!is.na(nmXdataind)){
     
     if (!(nrow(x$A) == ncol(x$x.data) && ncol(x$A) == p)){
@@ -67,10 +71,9 @@ HKF <- function(...)
       stop("Incompatible dimensions of matrices check A and x.data")
     } 
     
-  } else{ # Not doing the correct thing here
+  } else{     # Not doing the correct thing here
     
-    x.data <- matrix(0,dim(y.data[1]),dim(y.data)[2])
-    
+    x.data  <- matrix(0,dim(y.data[1]),dim(y.data)[2])
     
   }
   

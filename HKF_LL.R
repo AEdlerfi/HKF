@@ -8,7 +8,7 @@ HKF.LL <- function(params, mod) {
   
   #mod <- build(params)
   
-#  mod <- stage1Est(initial.parameters)
+  #mod <- NR_Sheen_Built
   
   
   tt <- dim(mod$y)[1]
@@ -23,13 +23,8 @@ HKF.LL <- function(params, mod) {
   
   for (t in 1:tt){
 
-    if(!is.na(mod$x.data.s)){
-      
-      mod$x.data.s[dim(mod$H)[1],1] <- 1 
-      
-        }
     
-    xi.ttm1 <- mod$FF %*% xi.tt + mod$cons%*%as.vector(mod$x.data.s[t,])# State t+1
+    xi.ttm1 <- mod$FF %*% xi.tt + mod$cons# State t+1
     P.ttm1 <- mod$FF %*% P.tt %*% t(mod$FF) + mod$Q 
     
     prediction.error <- (as.vector(mod$y.data[t,]) - as.vector(t(mod$A) %*% as.vector(mod$x.data[t,])) - as.vector(t(mod$H) %*% xi.ttm1))

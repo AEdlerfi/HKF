@@ -54,7 +54,7 @@ HKF.MLE <- function(build, params, Param_LB = NA, Param_UB = NA, useoptim = FALS
       nloptr.out <- nloptr(params, f, eval_grad_f=function(x) {gradient(f, x)},lb=Param_LB, opts=list("algorithm"="NLOPT_LD_LBFGS","xtol_rel"=1.0e-8,"maxeval"=5000))
     
     if(!is.na(Param_LB) && !is.na(Param_UB)) # both upper and lower mod$constraint
-      nloptr.out <- nloptr(params, f, eval_grad_f=function(x) {gradient(f, x)},lb=Param_UB, ub=Param_LB, opts=list("algorithm"="NLOPT_LD_LBFGS","xtol_rel"=1.0e-8,"maxeval"=5000))
+      nloptr.out <- nloptr(params, f, eval_grad_f=function(x) {gradient(f, x)},lb=Param_LB, ub=Param_UB, opts=list("algorithm"="NLOPT_LD_LBFGS","xtol_rel"=1.0e-8,"maxeval"=5000))
     
     
       
