@@ -4,8 +4,9 @@
 
 # @mod a list containing a State Space model
 # @t the number of time steps
-# @xi.tt1 the state vector at time =1
-# @xi.tt1 the state variance-covariance matrix at time =1
+# Change all xi.ttm1 to xi.p (prediction)
+# Change all xi.tt to xi.f (filtered)
+# Change all xi.tT to xi.s (smoothed)
 
 
 HKF.filter <-   function(mod, t=1, xi.tt1 = NA, P.tt1 = NA) {

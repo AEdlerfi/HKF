@@ -4,8 +4,9 @@
 
 # @mod a model of the class HKF.filtered 
 # @t the number of time steps
-# @xi.tpT the final smoothed state
-# @P.tpT the final smoothed variance - covariance
+# Change all xi.ttm1 to xi.p (prediction)
+# Change all xi.tt to xi.f (filtered)
+# Change all xi.tT to xi.s (smoothed)
 
 
 HKF.smooth <- function(mod, t = 0,  xi.tp1T=NA, P.tp1T=NA){

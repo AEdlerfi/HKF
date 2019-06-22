@@ -2,7 +2,10 @@
 # Function name: HKF.LL (Hamilton Kalman Filter Log liklihood)
 # Description: This function takes as inputs the coefficient matrices of the given ss model and starting values for initial state vector and CV and returns a vector with the log likelihood as well as the cumulative sum
 #-----------------------------------------------------------------------------------------
-# This function is fine - it is MLE which needs looking at
+# Change all xi.ttm1 to xi.p (prediction)
+# Change all xi.tt to xi.f (filtered)
+# Change all xi.tT to xi.s (smoothed)
+
 
 HKF.LL <- function(params, mod) {
   
