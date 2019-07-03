@@ -43,8 +43,8 @@ HKF.smooth <- function(mod, t = 0,  xi.sT=NA, P.sT=NA){
     xi.tp1t <- mod$xi.p[t+1,]
     
     
-    xi.s <- xi.f + as.vector(J.t %*% (xi.tp1T - xi.tp1t))
-    P.s <- P.f + J.t %*% (P.tp1T - P.tp1t) %*% t(J.t)
+    xi.s <- xi.f + as.vector(J.t %*% (xi.sT - xi.tp1t))
+    P.s <- P.f + J.t %*% (P.sT - P.tp1t) %*% t(J.t)
     
     if (t > 1) {
       
