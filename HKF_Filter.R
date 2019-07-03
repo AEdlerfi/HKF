@@ -4,56 +4,56 @@
 
 # @mod a list containing a State Space model
 # @t the number of time steps
-# Change all xi.ttm1 to xi.p (prediction)
-# Change all xi.tt to xi.f (filtered)
-# Change all xi.tT to xi.s (smoothed)
+# Change all xi.p to xi.p (prediction)
+# Change all xi.f to xi.f (filtered)
+# Change all xi.f to xi.s (smoothed)
 
 
-HKF.filter <-   function(mod, t=1, xi.tt1 = NA, P.tt1 = NA) {
+HKF.filter <-   function(mod, t=1, xi.f1 = NA, P.f1 = NA, type = 1) {
   
   
-  if(!is.na(xi.tt1) && !is.na(P.tt1)){
+  if(!is.na(xi.f1) && !is.na(P.f1)){
     #   
-    xi.ttm1 <- as.vector(mod$FF %*% xi.tt1 + mod$cons)
-    P.ttm1 <- mod$FF %*% P.tt1 %*% t(mod$FF) + mod$Q
+    xi.p <- as.vector(mod$FF %*% xi.f1 + mod$cons)
+    P.p <- mod$FF %*% P.f1 %*% t(mod$FF) + mod$Q
     
   }else{
     
     # State updating eq
-    xi.ttm1 <- as.vector(mod$FF %*% mod$X0 + mod$cons)
+    xi.p <- as.vector(mod$FF %*% mod$X0 + mod$cons)
     
     # MSE updating eq
-    P.ttm1 <- mod$FF %*% mod$P0 %*% t(mod$FF) + mod$Q
+    P.p <- mod$FF %*% mod$P0 %*% t(mod$FF) + mod$Q
     
   }
   
   
   # Equations (13.2.9 - 13.2.10) from Hamilton Chapter 13, page 379
-  prediction.error <- (as.vector(mod$y.data[t,]) - as.vector(t(mod$A) %*% as.vector(mod$x.data[t,])) - as.vector(t(mod$H) %*% xi.ttm1))
+  prediction.error <- (as.vector(mod$y.data[t,]) - as.vector(t(mod$A) %*% as.vector(mod$x.data[t,])) - as.vector(t(mod$H) %*% xi.p))
   
   # Mean Squared Error
-  HPHR <- t(mod$H) %*% P.ttm1 %*% mod$H + mod$R
+  HPHR <- t(mod$H) %*% P.p %*% mod$H + mod$R
   
   # State updating equation
-  xi.tt <- xi.ttm1 + as.vector(P.ttm1 %*% mod$H %*% solve(HPHR, prediction.error))
+  xi.f <- xi.p + as.vector(P.p %*% mod$H %*% solve(HPHR, prediction.error))
   
   # Updated MSE 
-  P.tt <- P.ttm1 - P.ttm1 %*% mod$H %*% solve(HPHR, t(mod$H) %*% P.ttm1)
+  P.f <- P.p - P.p %*% mod$H %*% solve(HPHR, t(mod$H) %*% P.p)
   
   if (t == dim(mod$y.data)[1]) {
     
     print("Kalman filter has run")
-    return(list("xi.ttm1"=xi.ttm1, "P.ttm1"=P.ttm1, "xi.tt"=xi.tt, "P.tt"=P.tt))
+    return(list("xi.p"=xi.p, "P.p"=P.p, "xi.f"=xi.f, "P.f"=P.f))
     
     
   } else {
     
-    tmp <- HKF.filter(mod, t+1, xi.tt1 = xi.tt , P.tt1 = P.tt)
+    tmp <- HKF.filter(mod, t+1, xi.f1 = xi.f , P.f1 = P.f)
     
-    return(list("xi.ttm1"=rbind(xi.ttm1, tmp$xi.ttm1),
-                "P.ttm1"=rbind(P.ttm1, tmp$P.ttm1),
-                "xi.tt"=rbind(xi.tt, tmp$xi.tt),
-                "P.tt"=rbind(P.tt, tmp$P.tt),
+    return(list("xi.p"=rbind(xi.p, tmp$xi.p),
+                "P.p"=rbind(P.p, tmp$P.p),
+                "xi.f"=rbind(xi.f, tmp$xi.f),
+                "P.f"=rbind(P.f, tmp$P.f),
                 "SS model" = mod
     )
     

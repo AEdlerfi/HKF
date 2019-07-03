@@ -17,7 +17,7 @@ HKF <- function(...)
     
   # Create new model
   
-  nm <- c("A","H","R","Q","FF","cons","X0","P0","y.data","x.data")
+  nm <- c("A","H","R","Q","FF","cons","X0","P0","y.data","x.data","type")
   nmInd <- match(nm,names(x))
   # Check for na's
   if(any(is.na(nmInd)))
@@ -109,6 +109,8 @@ HKF <- function(...)
                                         0))) 
       stop("W is not a valid variance matrix")
     
+  
+  
   
   mod <- x[nmInd]
   class(mod) <- "HKF"

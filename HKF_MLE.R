@@ -31,14 +31,14 @@ HKF.MLE <- function(build, params, Param_LB = NA, Param_UB = NA, useoptim = FALS
     
     mod <- build(params)
     
-    return(-HKF.LL(params, mod)$ll.cum)
+    return(-HKF.LL(params, mod, type = mod$type)$ll.cum)
     
   }
   
   
   if(useoptim ==TRUE){
     
-    nloptr.out <- optim(params, f, ...)
+      nloptr.out <- optim(params, f, hessian = TRUE, ...)
     
   } else{
   
