@@ -13,40 +13,44 @@ HKF.filter <-   function(mod, t=1, xi.f1 = NA, P.f1 = NA, type = 1) {
   
   
   if(!is.na(xi.f1) && !is.na(P.f1)){
-    #   
+    
+    # State prediction    
     xi.p <- as.vector(mod$FF %*% xi.f1 + mod$cons)
+    # State prediction error variance - covariance matrix
     P.p <- mod$FF %*% P.f1 %*% t(mod$FF) + mod$Q
     
-  }else{
+  }else{ # Starts recursions 
     
-    # State updating eq
+    # State prediction
     xi.p <- as.vector(mod$FF %*% mod$X0 + mod$cons)
     
-    # MSE updating eq
+    # State prediction error variance - covariance matrix
     P.p <- mod$FF %*% mod$P0 %*% t(mod$FF) + mod$Q
     
   }
   
   
-  # Equations (13.2.9 - 13.2.10) from Hamilton Chapter 13, page 379
+  # Prediction error
   prediction.error <- (as.vector(mod$y.data[t,]) - as.vector(t(mod$A) %*% as.vector(mod$x.data[t,])) - as.vector(t(mod$H) %*% xi.p))
   
-  # Mean Squared Error
+  # Conditional variance
   HPHR <- t(mod$H) %*% P.p %*% mod$H + mod$R
   
-  # State updating equation
+  # Filtered state (Predicted state + Kalman gain)
   xi.f <- xi.p + as.vector(P.p %*% mod$H %*% solve(HPHR, prediction.error))
   
-  # Updated MSE 
+  # Filtered error variance covariance 
   P.f <- P.p - P.p %*% mod$H %*% solve(HPHR, t(mod$H) %*% P.p)
   
+  
+  # If we have reached the end of the data stop!
   if (t == dim(mod$y.data)[1]) {
     
     print("Kalman filter has run")
     return(list("xi.p"=xi.p, "P.p"=P.p, "xi.f"=xi.f, "P.f"=P.f))
     
     
-  } else {
+  } else { # create next prediction
     
     tmp <- HKF.filter(mod, t+1, xi.f1 = xi.f , P.f1 = P.f)
     
